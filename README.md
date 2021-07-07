@@ -1,4 +1,4 @@
-# RangeSlider 2021.7.3
+# RangeSlider 2021.7.4
 
 Range selection widget for Python Tkinter GUI developement in slider widget structure with two handles.
 
@@ -22,17 +22,17 @@ Range selection widget for Python Tkinter GUI developement in slider widget stru
 
 For horizontal RangeSlider:
 ```
-from RangeSlider import RangeSliderH 
+from RangeSlider.RangeSlider import RangeSliderH 
 ```
 
 For vertical RangeSlider:
 ```
-from RangeSlider import RangeSliderV
+from RangeSlider.RangeSlider import RangeSliderV
 ```
 
 For both horizontal and vertical RangeSlider:
 ```
-from RangeSlider import RangeSliderH, RangeSliderV
+from RangeSlider.RangeSlider import RangeSliderH, RangeSliderV
 ```
 
 ***Creating RangeSlider widget:***
