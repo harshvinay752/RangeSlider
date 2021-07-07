@@ -1,4 +1,4 @@
-# RangeSlider 2021.07
+# RangeSlider 2021.7.2
 
 Range selection widget for Python Tkinter GUI developement in slider widget structure with two handles.
 
