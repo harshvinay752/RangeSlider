@@ -14,13 +14,14 @@ class RangeSliderH(Frame):
     DIGIT_PRECISION = '.1f' # for showing in the canvas
     FONT_SIZE=16
     FONT_FAMILY='Times'
+    TEXT_COLOR='#000000'
     IMAGE_ANCHOR_L=CENTER
     IMAGE_ANCHOR_R=CENTER
     def __init__(self, master, variables, Width = 400, Height = 80, min_val = 0, max_val = 1, padX=3,
                     image_anchorR=CENTER, image_anchorL=CENTER, imageL=None, imageR=None,
                     auto=True, line_width=3, bar_radius=10,
                     bar_color_inner='#5c8a8a', line_s_color="#0a50ff", bar_color_outer='#c2d6d6', line_color = '#476b6b', bgColor= '#ffffff',
-                    show_value = True, digit_precision='.1f', valueSide='TOP', font_family='Times', font_size=16, suffix=""):
+                    show_value = True, digit_precision='.1f', valueSide='TOP', font_family='Times', font_size=16, text_color = '#000000', suffix=""):
         RangeSliderH.LINE_COLOR=line_color
         RangeSliderH.LINE_WIDTH=line_width
         RangeSliderH.BAR_COLOR_INNER=bar_color_inner
@@ -30,11 +31,12 @@ class RangeSliderH(Frame):
         RangeSliderH.DIGIT_PRECISION=digit_precision
         RangeSliderH.FONT_SIZE=font_size
         RangeSliderH.FONT_FAMILY=font_family
+        RangeSliderH.TEXT_COLOR=text_color
         RangeSliderH.IMAGE_ANCHOR_L=image_anchorL
         RangeSliderH.IMAGE_ANCHOR_R=image_anchorR
         RangeSliderH.LINE_S_COLOR=line_s_color
         if auto:
-            if imageL!=None or imageR!=None:
+            if imageL!=None or imageR!=None: 
                 raise Exception("Can't decide if to use auto shape or images!")
             else:
                 critical1=max(max(len(str(min_val)+suffix),len(str(max_val)+suffix))*RangeSliderH.FONT_SIZE*1.33/4,RangeSliderH.BAR_RADIUS)
@@ -189,11 +191,11 @@ class RangeSliderH(Frame):
                 if self.valueSide=='TOP':
                     y_value = y-RangeSliderH.BAR_RADIUS-RangeSliderH.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x,y_value,anchor=S, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE))
+                    id_value = self.canv.create_text(x,y_value,anchor=S, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE),fill=RangeSliderH.TEXT_COLOR)
                 elif self.valueSide=='BOTTOM':
                     y_value = y+RangeSliderH.BAR_RADIUS+RangeSliderH.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x,y_value,anchor=N, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE))
+                    id_value = self.canv.create_text(x,y_value,anchor=N, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE),fill=RangeSliderH.TEXT_COLOR)
                 else:
                     raise Exception("valueSide can either be TOP or BOTTOM")
                 return [id_outer, id_inner, id_value]
@@ -211,11 +213,11 @@ class RangeSliderH(Frame):
                 if self.valueSide=='TOP':
                     y_value = y-self.ImageL.height()/2-RangeSliderH.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x,y_value,anchor=S, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE))
+                    id_value = self.canv.create_text(x,y_value,anchor=S, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE),fill=RangeSliderH.TEXT_COLOR)
                 elif self.valueSide=='BOTTOM':
                     y_value = y+self.ImageL.height()/2+RangeSliderH.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x,y_value,anchor=N, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE))
+                    id_value = self.canv.create_text(x,y_value,anchor=N, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE),fill=RangeSliderH.TEXT_COLOR)
                 else:
                     raise Exception("valueSide can either be TOP or BOTTOM")
                 return [imageH, id_value]
@@ -301,13 +303,14 @@ class RangeSliderV(Frame):
     DIGIT_PRECISION = '.1f' # for showing in the canvas
     FONT_SIZE=16
     FONT_FAMILY='Times'
+    TEXT_COLOR='#000000'
     IMAGE_ANCHOR_L=CENTER
     IMAGE_ANCHOR_U=CENTER
     def __init__(self, master, variables, Width = 80, Height = 400, min_val = 0, max_val = 1, padY=3,
                     image_anchorU=CENTER, image_anchorL=CENTER, imageL=None, imageU=None,
                     auto=True, line_width=3, bar_radius=10,
                     bar_color_inner='#5c8a8a', line_s_color="#0a50ff", bar_color_outer='#c2d6d6', line_color = '#476b6b', bgColor='#ffffff',
-                    show_value = True, digit_precision='.1f', valueSide='LEFT', font_family='Times', font_size=16, suffix=""):
+                    show_value = True, digit_precision='.1f', valueSide='LEFT', font_family='Times', font_size=16, text_color='#000000', suffix=""):
         RangeSliderV.LINE_COLOR=line_color
         RangeSliderV.LINE_WIDTH=line_width
         RangeSliderV.BAR_COLOR_INNER=bar_color_inner
@@ -317,6 +320,7 @@ class RangeSliderV(Frame):
         RangeSliderV.DIGIT_PRECISION=digit_precision
         RangeSliderV.FONT_SIZE=font_size
         RangeSliderV.FONT_FAMILY=font_family
+        RangeSliderV.TEXT_COLOR=text_color
         RangeSliderV.IMAGE_ANCHOR_L=image_anchorL
         RangeSliderV.IMAGE_ANCHOR_U=image_anchorU
         RangeSliderV.LINE_S_COLOR=line_s_color
@@ -472,11 +476,11 @@ class RangeSliderV(Frame):
                 if self.valueSide=='LEFT':
                     x_value = x-RangeSliderV.BAR_RADIUS-RangeSliderV.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x_value,y,anchor=E, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE))
+                    id_value = self.canv.create_text(x_value,y,anchor=E, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE),fill=RangeSliderV.TEXT_COLOR)
                 elif self.valueSide=='RIGHT':
                     x_value = x+RangeSliderV.BAR_RADIUS+RangeSliderV.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x_value,y,anchor=W, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE))
+                    id_value = self.canv.create_text(x_value,y,anchor=W, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE),fill=RangeSliderV.TEXT_COLOR)
                 else:
                     raise Exception("valueSide can either be LEFT or RIGHT.")
                 return [id_outer, id_inner, id_value]
@@ -494,11 +498,11 @@ class RangeSliderV(Frame):
                 if self.valueSide=='LEFT':
                     x_value = x-self.ImageL.width()/2-RangeSliderV.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x_value,y, anchor=E, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE))
+                    id_value = self.canv.create_text(x_value,y, anchor=E, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE),fill=RangeSliderV.TEXT_COLOR)
                 elif self.valueSide=='RIGHT':
                     x_value = x+self.ImageL.width()/2+RangeSliderV.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x_value,y, anchor=W, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE))
+                    id_value = self.canv.create_text(x_value,y, anchor=W, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE),fill=RangeSliderV.TEXT_COLOR)
                 else:
                     raise Exception("valueSide can either be LEFT or RIGHT")  
                 return [imageH, id_value]
