@@ -70,7 +70,6 @@ class RangeSliderH(Frame):
         self.ImageL=imageL
         self.ImageR=imageR
         self.master = master
-        self.init_lis = [min_val,max_val]
         self.max_val = max_val
         self.min_val = min_val
         self.show_value = show_value
@@ -80,7 +79,11 @@ class RangeSliderH(Frame):
         self.canv_H = self.H
         self.canv_W = self.W
         self.suffix=suffix
-        self.variables=variables
+        self.variables = variables
+        try:
+            self.init_lis = [variables[0].get(), variables[1].get()]
+        except Exception:
+            self.init_lis = [min_val, max_val]
         if not show_value:
             self.slider_y = self.canv_H/2 # y pos of the slider
         else:
@@ -357,7 +360,6 @@ class RangeSliderV(Frame):
         self.ImageL=imageL
         self.ImageU=imageU
         self.master = master
-        self.init_lis = [min_val,max_val]
         self.max_val = max_val
         self.min_val = min_val
         self.show_value = show_value
@@ -367,7 +369,11 @@ class RangeSliderV(Frame):
         self.canv_H = self.H
         self.canv_W = self.W
         self.suffix=suffix
-        self.variables=variables
+        self.variables = variables
+        try:
+            self.init_lis = [variables[0].get(), variables[1].get()]
+        except Exception:
+            self.init_lis = [min_val, max_val]
         if not show_value:
             self.slider_x = self.canv_W/2 # y pos of the slider
         else:
