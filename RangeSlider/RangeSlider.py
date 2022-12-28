@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter.ttk import *
 
-
+# v2022.12.1
 
 class RangeSliderH(Frame):
     LINE_COLOR = "#476b6b"
@@ -17,11 +17,13 @@ class RangeSliderH(Frame):
     TEXT_COLOR='#000000'
     IMAGE_ANCHOR_L=CENTER
     IMAGE_ANCHOR_R=CENTER
+    STEP_MARKER_COLOR='#ffffff'
     def __init__(self, master, variables, Width = 400, Height = 80, min_val = 0, max_val = 1, padX=3,
                     image_anchorR=CENTER, image_anchorL=CENTER, imageL=None, imageR=None,
                     auto=True, line_width=3, bar_radius=10,
-                    bar_color_inner='#5c8a8a', line_s_color="#0a50ff", bar_color_outer='#c2d6d6', line_color = '#476b6b', bgColor= '#ffffff',
-                    show_value = True, digit_precision='.1f', valueSide='TOP', font_family='Times', font_size=16, text_color = '#000000', suffix=""):
+                    bar_color_inner='#5c8a8a', line_s_color="#0a50ff", bar_color_outer='#c2d6d6', line_color = '#476b6b', bgColor= '#ffffff', step_marker_color = "#ffffff", font_color = '#000000',
+                    show_value = True, digit_precision='.1f', valueSide='TOP', font_family='Times', font_size=16, suffix="",
+                    step_size = 0,step_marker=False, cross_each_other = False):
         RangeSliderH.LINE_COLOR=line_color
         RangeSliderH.LINE_WIDTH=line_width
         RangeSliderH.BAR_COLOR_INNER=bar_color_inner
@@ -31,12 +33,13 @@ class RangeSliderH(Frame):
         RangeSliderH.DIGIT_PRECISION=digit_precision
         RangeSliderH.FONT_SIZE=font_size
         RangeSliderH.FONT_FAMILY=font_family
-        RangeSliderH.TEXT_COLOR=text_color
         RangeSliderH.IMAGE_ANCHOR_L=image_anchorL
         RangeSliderH.IMAGE_ANCHOR_R=image_anchorR
         RangeSliderH.LINE_S_COLOR=line_s_color
+        RangeSliderH.STEP_MARKER_COLOR=step_marker_color
+        RangeSliderH.TEXT_COLOR=text_color
         if auto:
-            if imageL!=None or imageR!=None: 
+            if imageL!=None or imageR!=None:
                 raise Exception("Can't decide if to use auto shape or images!")
             else:
                 critical1=max(max(len(str(min_val)+suffix),len(str(max_val)+suffix))*RangeSliderH.FONT_SIZE*1.33/4,RangeSliderH.BAR_RADIUS)
@@ -68,10 +71,13 @@ class RangeSliderH(Frame):
                 else:
                     raise Exception("Image dimensions incompatible, both handles should have same height and width respectively.")
         Frame.__init__(self, master, height = Height, width = Width)
+        self.cross_each_other = cross_each_other
         self.padx=padX
         self.ImageL=imageL
         self.ImageR=imageR
         self.master = master
+        if self.cross_each_other == False:
+            assert variables[0].get() >= variables[1].get(), "Left Handle value is more than the Right Handle Value, which is not possible."
         self.max_val = max_val
         self.min_val = min_val
         self.show_value = show_value
@@ -81,11 +87,15 @@ class RangeSliderH(Frame):
         self.canv_H = self.H
         self.canv_W = self.W
         self.suffix=suffix
-        self.variables = variables
-        try:
-            self.init_lis = [variables[0].get(), variables[1].get()]
-        except Exception:
-            self.init_lis = [min_val, max_val]
+        self.variables=variables
+        self.step_marker = step_marker
+        if step_size != 0:
+            self.init_lis = [(variables[0].get()//step_size)*step_size,
+                            (variables[1].get()//step_size)*step_size]
+        else:
+            self.init_lis = [variables[0].get(),
+                            variables[1].get()]
+        self.step_size= step_size / (self.max_val-self.min_val)
         if not show_value:
             self.slider_y = self.canv_H/2 # y pos of the slider
         else:
@@ -105,7 +115,7 @@ class RangeSliderH(Frame):
             self.slider_x = RangeSliderH.BAR_RADIUS+self.padx # x pos of the slider (left side)
         else:
             self.slider_x = self.ImageL.width()/2+self.padx
-
+        self.L = self.canv_W - 2*self.slider_x
         self.bars = []
         self.selected_idx = None # current selection bar index
         for value in self.init_lis:
@@ -133,6 +143,16 @@ class RangeSliderH(Frame):
         values = [bar["Value"] for bar in self.bars]
         return values
 
+    def forceValues(self, values):
+        """values needs to be a list of the following format:
+           [first_handle_value, second_handle_value], where first and second are in reference
+           to the variables given, depending on cross_each_other, if cross_each_other is left
+           to default value of False, first refers to left and second refers to right. Both the
+           values should be between min_val and max_val."""
+        assert all([pos >= self.min_val and pos <= self.max_val for pos in values])
+        for idx in range(len(self.bars)):
+            self.__moveBar(idx, (values[idx] - self.min_val)/(self.max_val - self.min_val)) # value = pos*(self.max_val - self.min_val)+self.min_val => pos = (value - self.min_val)/(self.max_val - self.min_val)
+
     def __setValues(self):
         values=self.getValues()
         self.variables[0].set(values[0])
@@ -141,6 +161,16 @@ class RangeSliderH(Frame):
     def getPos(self):
         poss = [bar["Pos"] for bar in self.bars]
         return poss
+
+    def forcePos(self, pos):
+        """pos needs to be a list of the following format:
+           [first_handle_value, second_handle_value], where first and second are in reference
+           to the variables given, depending on cross_each_other, if cross_each_other is left
+           to default value of False, first refers to left and second refers to right. Both the
+           values should be between 0 and 1."""
+        assert all([pos >= 0 and pos <= 1 for pos in pos])
+        for idx in range(len(self.bars)):
+            self.__moveBar(idx, pos[idx])
 
     def _mouseMotion(self, event):
         x = event.x; y = event.y
@@ -160,23 +190,36 @@ class RangeSliderH(Frame):
         idx = self.selected_idx
         self.__moveBar(idx,pos)
 
+    def __addStepMarker(self):
+        numberOfMarkers = int((1 // self.step_size)) + 1
+        markerXs = [self.slider_x + i*(self.step_size * self.L) for i in range(numberOfMarkers)]
+        R = self.LINE_WIDTH/2
+        markerIDs = [self.canv.create_line(mX,self.slider_y-R,mX,self.slider_y+R, fill = RangeSliderV.STEP_MARKER_COLOR) for mX in markerXs]
+        return (markerIDs)
+
     def __addTrack(self, startx, starty, endx, endy, posL, posR):
         rangeOutL = self.canv.create_line(startx, starty, startx+posL*(endx-startx), endy, fill = RangeSliderH.LINE_COLOR, width = RangeSliderH.LINE_WIDTH)
         rangeS = self.canv.create_line(startx+posL*(endx-startx), starty, endx-(1-posR)*(endx-startx), endy, fill = RangeSliderH.LINE_S_COLOR, width = RangeSliderH.LINE_WIDTH)
         rangeOutR = self.canv.create_line(endx-(1-posR)*(endx-startx), starty, endx, endy, fill = RangeSliderH.LINE_COLOR, width = RangeSliderH.LINE_WIDTH)
-        return [rangeOutL, rangeS, rangeOutR]
+        if self.step_marker:
+            markerIDs = self.__addStepMarker()
+        return [rangeOutL, rangeS, rangeOutR, markerIDs]
 
     def __addTrackL(self, startx, starty, endx, endy, posL, posR):
         rangeOutL = self.canv.create_line(startx, starty, startx+posL*(endx-startx), endy, fill = RangeSliderH.LINE_COLOR, width = RangeSliderH.LINE_WIDTH)
         rangeS = self.canv.create_line(startx+posL*(endx-startx), starty, endx-(1-posR)*(endx-startx), endy, fill = RangeSliderH.LINE_S_COLOR, width = RangeSliderH.LINE_WIDTH)
         # rangeOutR = self.canv.create_line(endx-(1-posR)*(endx-startx), starty, endx, endy, fill = RangeSliderH.LINE_COLOR, width = RangeSliderH.LINE_WIDTH)
-        return [rangeOutL, rangeS]
+        if self.step_marker:
+            markerIDs = self.__addStepMarker()
+        return [rangeOutL, rangeS, markerIDs]
 
     def __addTrackR(self, startx, starty, endx, endy, posL, posR):
         # rangeOutL = self.canv.create_line(startx, starty, startx+posL*(endx-startx), endy, fill = RangeSliderH.LINE_COLOR, width = RangeSliderH.LINE_WIDTH)
         rangeS = self.canv.create_line(startx+posL*(endx-startx), starty, endx-(1-posR)*(endx-startx), endy, fill = RangeSliderH.LINE_S_COLOR, width = RangeSliderH.LINE_WIDTH)
         rangeOutR = self.canv.create_line(endx-(1-posR)*(endx-startx), starty, endx, endy, fill = RangeSliderH.LINE_COLOR, width = RangeSliderH.LINE_WIDTH)
-        return [rangeS, rangeOutR]
+        if self.step_marker:
+            markerIDs = self.__addStepMarker()
+        return [rangeS, rangeOutR, markerIDs]
 
     def __addBar(self, pos, tempIdx=None):
         """@ pos: position of the bar, ranged from (0,1)"""
@@ -194,11 +237,11 @@ class RangeSliderH(Frame):
                 if self.valueSide=='TOP':
                     y_value = y-RangeSliderH.BAR_RADIUS-RangeSliderH.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x,y_value,anchor=S, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE),fill=RangeSliderH.TEXT_COLOR)
+                    id_value = self.canv.create_text(x,y_value,anchor=S, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE), fill = RangeSliderH.TEXT_COLOR)
                 elif self.valueSide=='BOTTOM':
                     y_value = y+RangeSliderH.BAR_RADIUS+RangeSliderH.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x,y_value,anchor=N, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE),fill=RangeSliderH.TEXT_COLOR)
+                    id_value = self.canv.create_text(x,y_value,anchor=N, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE), fill = RangeSliderH.TEXT_COLOR)
                 else:
                     raise Exception("valueSide can either be TOP or BOTTOM")
                 return [id_outer, id_inner, id_value]
@@ -216,11 +259,11 @@ class RangeSliderH(Frame):
                 if self.valueSide=='TOP':
                     y_value = y-self.ImageL.height()/2-RangeSliderH.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x,y_value,anchor=S, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE),fill=RangeSliderH.TEXT_COLOR)
+                    id_value = self.canv.create_text(x,y_value,anchor=S, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE), fill = RangeSliderH.TEXT_COLOR)
                 elif self.valueSide=='BOTTOM':
                     y_value = y+self.ImageL.height()/2+RangeSliderH.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x,y_value,anchor=N, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE),fill=RangeSliderH.TEXT_COLOR)
+                    id_value = self.canv.create_text(x,y_value,anchor=N, text = format(value, RangeSliderH.DIGIT_PRECISION)+self.suffix,font=(RangeSliderH.FONT_FAMILY,RangeSliderH.FONT_SIZE), fill = RangeSliderH.TEXT_COLOR)
                 else:
                     raise Exception("valueSide can either be TOP or BOTTOM")
                 return [imageH, id_value]
@@ -237,22 +280,26 @@ class RangeSliderH(Frame):
                 self.canv.delete(id)
         for trackComponentsId in self.track[idx:idx+2]:
             self.canv.delete(trackComponentsId)
+        for trackComponentsId in self.track[-1]:
+            self.canv.delete(trackComponentsId)
         if idx==0:
             otherIdx=1
             otherPos=positions[1]
-            if pos<=otherPos:
-                pos=pos
-            else:
-                pos=current_pos
-            self.track[0:2] = self.__addTrackL(self.slider_x, self.slider_y, self.canv_W-self.slider_x, self.slider_y, pos, otherPos)
+            if self.cross_each_other == False:
+                if pos<=otherPos:
+                    pos=pos
+                else:
+                    pos=current_pos
+            self.track[0], self.track[1], self.track[-1] = self.__addTrackL(self.slider_x, self.slider_y, self.canv_W-self.slider_x, self.slider_y, pos, otherPos)
         else:
             otherIdx=0
             otherPos=positions[0]
-            if pos>=otherPos:
-                pos=pos
-            else:
-                pos=current_pos
-            self.track[1:3] = self.__addTrackR(self.slider_x, self.slider_y, self.canv_W-self.slider_x, self.slider_y, otherPos, pos)
+            if self.cross_each_other == False:
+                if pos>=otherPos:
+                    pos=pos
+                else:
+                    pos=current_pos
+            self.track[1], self.track[2], self.track[-1] = self.__addTrackR(self.slider_x, self.slider_y, self.canv_W-self.slider_x, self.slider_y, otherPos, pos)
         
         self.bars[idx]["Ids"] = self.__addBar(pos, idx)
         self.bars[idx]["Pos"] = pos
@@ -266,7 +313,10 @@ class RangeSliderH(Frame):
 
     def __calcPos(self, x):
         """calculate position from x coordinate"""
-        pos = (x - self.slider_x)/(self.canv_W-2*self.slider_x)
+        pos = (x - self.slider_x)/self.L
+        if self.step_size != 0:
+            css = (pos // self.step_size)
+            pos = (css + 1 * (pos % self.step_size > 0.5)) * self.step_size
         if pos<0:
             return 0
         elif pos>1:
@@ -309,11 +359,14 @@ class RangeSliderV(Frame):
     TEXT_COLOR='#000000'
     IMAGE_ANCHOR_L=CENTER
     IMAGE_ANCHOR_U=CENTER
+    STEP_MARKER_COLOR='#ffffff'
     def __init__(self, master, variables, Width = 80, Height = 400, min_val = 0, max_val = 1, padY=3,
                     image_anchorU=CENTER, image_anchorL=CENTER, imageL=None, imageU=None,
                     auto=True, line_width=3, bar_radius=10,
-                    bar_color_inner='#5c8a8a', line_s_color="#0a50ff", bar_color_outer='#c2d6d6', line_color = '#476b6b', bgColor='#ffffff',
-                    show_value = True, digit_precision='.1f', valueSide='LEFT', font_family='Times', font_size=16, text_color='#000000', suffix=""):
+                    bar_color_inner='#5c8a8a', line_s_color="#0a50ff", bar_color_outer='#c2d6d6', line_color = '#476b6b', bgColor='#ffffff', step_marker_color = "#ffffff", font_color = '#000000',
+                    show_value = True, digit_precision='.1f', valueSide='LEFT', font_family='Times', font_size=16, suffix="",
+                    step_size = 0, step_marker=False ,cross_each_other = False):
+
         RangeSliderV.LINE_COLOR=line_color
         RangeSliderV.LINE_WIDTH=line_width
         RangeSliderV.BAR_COLOR_INNER=bar_color_inner
@@ -323,10 +376,11 @@ class RangeSliderV(Frame):
         RangeSliderV.DIGIT_PRECISION=digit_precision
         RangeSliderV.FONT_SIZE=font_size
         RangeSliderV.FONT_FAMILY=font_family
-        RangeSliderV.TEXT_COLOR=text_color
         RangeSliderV.IMAGE_ANCHOR_L=image_anchorL
         RangeSliderV.IMAGE_ANCHOR_U=image_anchorU
         RangeSliderV.LINE_S_COLOR=line_s_color
+        RangeSliderV.STEP_MARKER_COLOR=step_marker_color
+        RangeSliderV.TEXT_COLOR=font_color
         if auto:
             if imageL!=None or imageU!=None:
                 raise Exception("Can't decide if to use auto shape or images!")
@@ -360,10 +414,19 @@ class RangeSliderV(Frame):
                 else:
                     raise Exception("Image dimensions incompatible, width and height of both handles should be same respectively.")
         Frame.__init__(self, master, height = Height, width = Width)
+        self.cross_each_other = cross_each_other
         self.pady=padY
         self.ImageL=imageL
         self.ImageU=imageU
         self.master = master
+        if self.cross_each_other == False:
+            assert variables[0].get() <= variables[1].get(), "Top Handle value is less than the Bottom Handle Value, which is not possible."
+        if step_size != 0:
+            self.init_lis = [(variables[0].get()//step_size)*step_size,
+                            (variables[1].get()//step_size)*step_size]
+        else:
+            self.init_lis = [variables[0].get(),
+                            variables[1].get()]
         self.max_val = max_val
         self.min_val = min_val
         self.show_value = show_value
@@ -373,11 +436,8 @@ class RangeSliderV(Frame):
         self.canv_H = self.H
         self.canv_W = self.W
         self.suffix=suffix
-        self.variables = variables
-        try:
-            self.init_lis = [variables[0].get(), variables[1].get()]
-        except Exception:
-            self.init_lis = [min_val, max_val]
+        self.variables=variables
+        self.step_size= step_size / (self.max_val-self.min_val)
         if not show_value:
             self.slider_x = self.canv_W/2 # y pos of the slider
         else:
@@ -394,7 +454,7 @@ class RangeSliderV(Frame):
             else:
                 raise Exception("valueSide can either be LEFT or RIGHT")
         self.slider_y=self.pady
-
+        self.L = self.canv_H - 2*self.slider_y
         self.bars = []
         self.selected_idx = None # current selection bar index
         for value in self.init_lis:
@@ -408,6 +468,7 @@ class RangeSliderV(Frame):
         self.canv.pack()
         self.canv.bind("<Motion>", self._mouseMotion)
         self.canv.bind("<B1-Motion>", self._moveBar)
+        self.step_marker = step_marker
         self.track = self.__addTrack(self.slider_x, self.slider_y, self.slider_x, self.canv_H-self.slider_y, self.bars[0]["Pos"], self.bars[1]["Pos"])
         tempIdx=0
         for bar in self.bars:
@@ -421,6 +482,16 @@ class RangeSliderV(Frame):
         values = [bar["Value"] for bar in self.bars]
         return values
 
+    def forceValues(self, values):
+        """values needs to be a list of the following format:
+           [first_handle_value, second_handle_value], where first and second are in reference
+           to the variables given, depending on cross_each_other, if cross_each_other is left
+           to default value of False, first refers to top and second refers to bottom. Both the
+           values should be between min_val and max_val."""
+        assert all([pos >= self.min_val and pos <= self.max_val for pos in values])
+        for idx in range(len(self.bars)):
+            self.__moveBar(idx, (values[idx] - self.min_val)/(self.max_val - self.min_val)) # value = pos*(self.max_val - self.min_val)+self.min_val => pos = (value - self.min_val)/(self.max_val - self.min_val)
+
     def __setValues(self):
         values=self.getValues()
         self.variables[0].set(values[0])
@@ -429,6 +500,16 @@ class RangeSliderV(Frame):
     def getPos(self):
         poss = [bar["Pos"] for bar in self.bars]
         return poss
+
+    def forcePos(self, pos):
+        """pos needs to be a list of the following format:
+           [first_handle_value, second_handle_value], where first and second are in reference
+           to the variables given, depending on cross_each_other, if cross_each_other is left
+           to default value of False, first refers to top and second refers to bottom. Both the
+           values should be between 0 and 1."""
+        assert all([pos >= 0 and pos <= 1 for pos in pos])
+        for idx in range(len(self.bars)):
+            self.__moveBar(idx, pos[idx])
 
     def _mouseMotion(self, event):
         x = event.x; y = event.y
@@ -448,23 +529,36 @@ class RangeSliderV(Frame):
         idx = self.selected_idx
         self.__moveBar(idx,pos)
 
+    def __addStepMarker(self):
+        numberOfMarkers = int((1 // self.step_size)) + 1
+        markerYs = [self.slider_y + i*(self.step_size * self.L) for i in range(numberOfMarkers)]
+        R = self.LINE_WIDTH/2
+        markerIDs = [self.canv.create_line(self.slider_x-R,mY,self.slider_x+R,mY, fill = RangeSliderV.STEP_MARKER_COLOR) for mY in markerYs]
+        return (markerIDs)
+
     def __addTrack(self, startx, starty, endx, endy, posL, posU):
         rangeOutL = self.canv.create_line(startx, starty+(1-posL)*(endy-starty), startx, endy, fill = RangeSliderV.LINE_COLOR, width = RangeSliderV.LINE_WIDTH)
         rangeS = self.canv.create_line(startx, starty+(1-posU)*(endy-starty), startx, starty+(1-posL)*(endy-starty), fill = RangeSliderV.LINE_S_COLOR, width = RangeSliderV.LINE_WIDTH)
         rangeOutU = self.canv.create_line(startx, starty, endx, starty+(1-posU)*(endy-starty), fill = RangeSliderV.LINE_COLOR, width = RangeSliderV.LINE_WIDTH)
-        return [rangeOutL, rangeS, rangeOutU]
+        if self.step_marker:
+            markerIDs = self.__addStepMarker()
+        return [rangeOutL, rangeS, rangeOutU, markerIDs]
 
     def __addTrackL(self, startx, starty, endx, endy, posL, posU):
         rangeOutL = self.canv.create_line(startx, starty+(1-posL)*(endy-starty), startx, endy, fill = RangeSliderV.LINE_COLOR, width = RangeSliderV.LINE_WIDTH)
         rangeS = self.canv.create_line(startx, starty+(1-posU)*(endy-starty), startx, starty+(1-posL)*(endy-starty), fill = RangeSliderV.LINE_S_COLOR, width = RangeSliderV.LINE_WIDTH)
         # rangeOutU = self.canv.create_line(startx, starty, endx, starty+(1-posU)*(endy-starty), fill = RangeSliderV.LINE_COLOR, width = RangeSliderV.LINE_WIDTH)
-        return [rangeOutL, rangeS]
+        if self.step_marker:
+            markerIDs = self.__addStepMarker()
+        return [rangeOutL, rangeS, markerIDs]
 
     def __addTrackR(self, startx, starty, endx, endy, posL, posU):
         # rangeOutL = self.canv.create_line(startx, starty+(1-posL)*(endy-starty), startx, endy, fill = RangeSliderV.LINE_COLOR, width = RangeSliderV.LINE_WIDTH)
         rangeS = self.canv.create_line(startx, starty+(1-posU)*(endy-starty), startx, starty+(1-posL)*(endy-starty), fill = RangeSliderV.LINE_S_COLOR, width = RangeSliderV.LINE_WIDTH)
         rangeOutU = self.canv.create_line(startx, starty, endx, starty+(1-posU)*(endy-starty), fill = RangeSliderV.LINE_COLOR, width = RangeSliderV.LINE_WIDTH)
-        return [rangeS, rangeOutU]
+        if self.step_marker:
+            markerIDs = self.__addStepMarker()
+        return [rangeS, rangeOutU, markerIDs]
 
     def __addBar(self, pos, tempIdx=None):
         """@ pos: position of the bar, ranged from (0,1)"""
@@ -482,11 +576,11 @@ class RangeSliderV(Frame):
                 if self.valueSide=='LEFT':
                     x_value = x-RangeSliderV.BAR_RADIUS-RangeSliderV.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x_value,y,anchor=E, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE),fill=RangeSliderV.TEXT_COLOR)
+                    id_value = self.canv.create_text(x_value,y,anchor=E, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE), fill = RangeSliderV.TEXT_COLOR)
                 elif self.valueSide=='RIGHT':
                     x_value = x+RangeSliderV.BAR_RADIUS+RangeSliderV.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x_value,y,anchor=W, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE),fill=RangeSliderV.TEXT_COLOR)
+                    id_value = self.canv.create_text(x_value,y,anchor=W, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE), fill = RangeSliderV.TEXT_COLOR)
                 else:
                     raise Exception("valueSide can either be LEFT or RIGHT.")
                 return [id_outer, id_inner, id_value]
@@ -504,11 +598,11 @@ class RangeSliderV(Frame):
                 if self.valueSide=='LEFT':
                     x_value = x-self.ImageL.width()/2-RangeSliderV.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x_value,y, anchor=E, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE),fill=RangeSliderV.TEXT_COLOR)
+                    id_value = self.canv.create_text(x_value,y, anchor=E, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE), fill = RangeSliderV.TEXT_COLOR)
                 elif self.valueSide=='RIGHT':
                     x_value = x+self.ImageL.width()/2+RangeSliderV.FONT_SIZE/2
                     value = pos*(self.max_val - self.min_val)+self.min_val
-                    id_value = self.canv.create_text(x_value,y, anchor=W, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE),fill=RangeSliderV.TEXT_COLOR)
+                    id_value = self.canv.create_text(x_value,y, anchor=W, text = format(value, RangeSliderV.DIGIT_PRECISION)+self.suffix,font=(RangeSliderV.FONT_FAMILY,RangeSliderV.FONT_SIZE), fill = RangeSliderV.TEXT_COLOR)
                 else:
                     raise Exception("valueSide can either be LEFT or RIGHT")  
                 return [imageH, id_value]
@@ -525,22 +619,26 @@ class RangeSliderV(Frame):
                 self.canv.delete(id)
         for trackComponentsId in self.track[idx:idx+2]:
             self.canv.delete(trackComponentsId)
+        for trackComponentsId in self.track[-1]:
+            self.canv.delete(trackComponentsId)
         if idx==0:
             otherIdx=1
             otherPos=positions[1]
-            if pos<=otherPos:
-                pos=pos
-            else:
-                pos=current_pos
-            self.track[0:2] = self.__addTrackL(self.slider_x, self.slider_y, self.slider_x, self.canv_H-self.slider_y, pos, otherPos)
+            if self.cross_each_other == False:
+                if pos<=otherPos:
+                    pos=pos
+                else:
+                    pos=current_pos
+            self.track[0], self.track[1], self.track[-1] = self.__addTrackL(self.slider_x, self.slider_y, self.slider_x, self.canv_H-self.slider_y, pos, otherPos)
         else:
             otherIdx=0
             otherPos=positions[0]
-            if pos>=otherPos:
-                pos=pos
-            else:
-                pos=current_pos
-            self.track[1:3] = self.__addTrackR(self.slider_x, self.slider_y, self.slider_x, self.canv_H-self.slider_y, otherPos, pos)
+            if self.cross_each_other == False:
+                if pos>=otherPos:
+                    pos=pos
+                else:
+                    pos=current_pos
+            self.track[1], self.track[2], self.track[-1] = self.__addTrackR(self.slider_x, self.slider_y, self.slider_x, self.canv_H-self.slider_y, otherPos, pos)
         
         self.bars[idx]["Ids"] = self.__addBar(pos, idx)
         self.bars[idx]["Pos"] = pos
@@ -554,8 +652,11 @@ class RangeSliderV(Frame):
 
     def __calcPos(self, y):
         """calculate position from x coordinate"""
-        pos = (y - self.slider_y)/(self.canv_H-2*self.slider_y)
+        pos = (y - self.slider_y)/self.L
         pos = 1-pos
+        if self.step_size != 0:
+            css = (pos // self.step_size)
+            pos = (css + 1 * (pos % self.step_size > 0.5)) * self.step_size
         if pos<0:
             return 0
         elif pos>1:
