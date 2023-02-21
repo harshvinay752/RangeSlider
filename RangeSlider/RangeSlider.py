@@ -37,7 +37,7 @@ class RangeSliderH(Frame):
         RangeSliderH.IMAGE_ANCHOR_R=image_anchorR
         RangeSliderH.LINE_S_COLOR=line_s_color
         RangeSliderH.STEP_MARKER_COLOR=step_marker_color
-        RangeSliderH.TEXT_COLOR=text_color
+        RangeSliderH.TEXT_COLOR=font_color
         if auto:
             if imageL!=None or imageR!=None:
                 raise Exception("Can't decide if to use auto shape or images!")
