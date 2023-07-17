@@ -1,11 +1,17 @@
-# RangeSlider 2022.12.1
+# RangeSlider 2023.07.1
 
 Range selection widget for Python Tkinter GUI developement in slider widget structure with two handles.
 <!--    
 ***Add-on files***
 + An ipython notebook is provided to illustrate the basic usage of tool. -->
 
-***Updates and Fixes w.r.t. v2021.7.4***
+***Updates and Fixes in v2023.07.1 w.r.t v2022.12.1***
++ Fixed: Error in updation of UI in absence of step markers.
++ Fixed: Error in initialisation of handle values. (Closing the issue: https://github.com/harshvinay752/RangeSlider/issues/7#issue-1806570927)
++ Added: Complimentary check for correct [step_size] parameter in case of usage of step markers.
++ Fixed: Updated example code in documentation.
+
+***Updates and Fixes in v2022.12.1 w.r.t. v2021.7.4***
 + Added option to change font color of label (Merged from: https://github.com/RWitak)
 + Improved and added option to set initial value of handles. (Merged from: https://github.com/sebasj13)
 
@@ -55,29 +61,29 @@ import tkinter as tk
  
 root = tk.Tk()
  
-hVar1 = DoubleVar(value = 0.2)  #left handle variable initialised to value 0.2
-hVar2 = DoubleVar(value = 0.85)  #right handle variable initialised to value 0.85
-rs1 = RangeSliderH( root , [hVar1, hVar2] )   #horizontal
-rs1.pack()   # or grid or place method could be used
+hLeft = tk.DoubleVar(value = 0.2)  #left handle variable initialised to value 0.2
+hRight = tk.DoubleVar(value = 0.85)  #right handle variable initialised to value 0.85
+hSlider = RangeSliderH( root , [hLeft, hRight] )   #horizontal slider
+hSlider.pack()   # or grid or place method could be used
 
-vVar1 = DoubleVar()   #bottom handle variable
-vVar2 = DoubleVar()   #top handle variable
-rs2 = RangeSliderV( root, [vVar1, vVar2] )    #vertical
-rs2.pack()  # or grid or place method could be used
+vBottom = tk.DoubleVar(value = 0)   #bottom handle variable
+vTop = tk.DoubleVar(value = 1)   #top handle variable
+vSlider = RangeSliderV( root, [vBottom, vTop] )    #vertical slider
+vSlider.pack()  # or grid or place method could be used
 
 root.mainloop()
 ```
 
 ***Getting current value***
 ```
-print ( rs1.getValues() )  #return type list of format [ left handle value, right handle value ]
-print ( rs2.getValues() )  #return type list of format [ bottom handle value, top handle value ]
+print ( hSlider.getValues() )  #return type list of format [ left handle value, right handle value ]
+print ( vSlider.getValues() )  #return type list of format [ bottom handle value, top handle value ]
 ```
 
 ***Force value***
 ```
-rs1.forceValues([0.2, 0.67])  #returns None
-rs2.forceValues([0.62, 0.85])  #returns None
+hSlider.forceValues([0.2, 0.67])  #returns None
+vSlider.forceValues([0.62, 0.85])  #returns None
 ```
 
 ***Callback on value change***
@@ -85,10 +91,10 @@ rs2.forceValues([0.62, 0.85])  #returns None
 def doSomething():
     print ('I was called.')
 
-hVar1.trace_add('w', doSomething)
-hVar2.trace_add('w', doSomething)
-vVar1.trace_add('w', doSomething)
-vVar2.trace_add('w', doSomething)
+hLeft.trace_add('w', doSomething)
+hRight.trace_add('w', doSomething)
+vBottom.trace_add('w', doSomething)
+vTop.trace_add('w', doSomething)
 ```
 ***Attributes***
 
@@ -116,7 +122,7 @@ vVar2.trace_add('w', doSomething)
 |line_color| '#476b6b' | hex value of color for unselected portion for widget track in string format|v2021.7.4|
 |bgColor| '#ffffff' | hex value of color for background of widget in string format |v2021.7.4|
 |step_marker_color| '#ffffff' | hex value of color in string format for steps marked on widget bar|__v2022.12.1__|
-|text_color| '#000000' | hex value of color for font of widget in string format |__v2022.12.1__|
+|font_color| '#000000' | hex value of color for font of widget in string format |__v2022.12.1__|
 |show_value| True | True if current value of handle are intended; otherwise False |v2021.7.4|
 |digit_precision| '.1f' | precision format for shown value |v2021.7.4|
 |valueSide| 'TOP' | 'TOP' if shown value intended above the handle or 'BOTTOM' if shown value intended below the handle |v2021.7.4|
@@ -151,7 +157,7 @@ vVar2.trace_add('w', doSomething)
 |line_color| '#476b6b' | hex value of color for unselected portion for widget track in string format|v2021.7.4|
 |bgColor| '#ffffff' | hex value of color for background of widget in string format |v2021.7.4|
 |step_marker_color| '#ffffff' | hex value of color in string format for steps marked on widget bar|__v2022.12.1__|
-|text_color| '#000000' | hex value of color for font of widget in string format |__v2022.12.1__|
+|font_color| '#000000' | hex value of color for font of widget in string format |__v2022.12.1__|
 |show_value| True | True if current value of handle are intended; otherwise False |v2021.7.4|
 |digit_precision| '.1f' | precision format for shown value |v2021.7.4|
 |valueSide| 'TOP' | 'TOP' if shown value intended above the handle or 'BOTTOM' if shown value intended below the handle |v2021.7.4|
@@ -185,9 +191,11 @@ vVar2.trace_add('w', doSomething)
 |forceValues(values)|values : a list of two values each indicating value of handle, values must be between min_val and max_val|return None|
 |forcePos(pos)|pos : a list of two normalised values each indicating value of handle, values must be between 0 and 1|return None|
 
-Note: The relation between value $v_i$ and normalised value $n_i$ of $i^{th}$ handle defined for a slider with max_val of $v_<$ and min_val of $v_>$ is given by:
+Note: The relation between value ($v_i$) and normalised value ($n_i$) of $i^{th}$ handle defined for a slider with max_val of $v_<$ and min_val of $v_>$ is given by:
 
-$n_i = \frac{v_i - v_>}{v_<-v_>}$
+$\begin{equation}
+n_i = \frac{v_i - v_>}{v_<-v_>}
+\end{equation}$
 
 
 # Words of Developer
@@ -195,8 +203,4 @@ $n_i = \frac{v_i - v_>}{v_<-v_>}$
 This is the second version of this library. It is one of its kind widget for tkinter. When I was developing a tool for my college project I found that at the time no inbuilt or external tool is available for tkinter allowing range selection. However, range selection is a high demand tool specially for applications dealing with data visualizations. I would appreciate any developer from any community who wants to contribute to this project.
 
 I thank RWitak and Sebastian for contributing to this project.
-
-Being a graduation student, I am unable to work over it for long. I will try to release next version having more features as soon as possible.
-
-
 
