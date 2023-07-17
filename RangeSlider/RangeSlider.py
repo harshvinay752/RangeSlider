@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter.ttk import *
 
-# v2022.12.1
+# v2023.07.1
 
 class RangeSliderH(Frame):
     LINE_COLOR = "#476b6b"
@@ -37,7 +37,7 @@ class RangeSliderH(Frame):
         RangeSliderH.IMAGE_ANCHOR_R=image_anchorR
         RangeSliderH.LINE_S_COLOR=line_s_color
         RangeSliderH.STEP_MARKER_COLOR=step_marker_color
-        RangeSliderH.TEXT_COLOR=text_color
+        RangeSliderH.TEXT_COLOR=font_color
         if auto:
             if imageL!=None or imageR!=None:
                 raise Exception("Can't decide if to use auto shape or images!")
@@ -46,13 +46,13 @@ class RangeSliderH(Frame):
                 critical2=2*(padX+RangeSliderH.BAR_RADIUS)
                 critical3=2*(1.33*RangeSliderH.FONT_SIZE+RangeSliderH.BAR_RADIUS)
                 if show_value and padX<critical1:
-                    raise Exception("padX too small, value won't be visible completely, expected padX to be atleast "+ str(critical1+1)+"px.")
+                    raise Exception("[padX] too small, value won't be visible completely, expected [padX] to be atleast "+ str(critical1+1)+"px.")
                 if Width<critical2:
-                    raise Exception("Dimensions incompatible, consider decreasing padX or bar_radius or consider increasing widget width, as per given configuration width should be atleast ."+str(critical2+1)+"px.")
+                    raise Exception("Dimensions incompatible, consider decreasing [padX] or [bar_radius] or consider increasing widget [Width], as per given configuration [Width] should be atleast ."+str(critical2+1)+"px.")
                 if Height<critical3:
-                    raise Exception("Dimensions incompatible, consider decreasing bar_radius or consider increasing widget height, as per given configuration height should be atleast ."+str(critical3+1)+"px.")
+                    raise Exception("Dimensions incompatible, consider decreasing [bar_radius] or consider increasing widget [Height], as per given configuration [Height] should be atleast ."+str(critical3+1)+"px.")
                 if RangeSliderH.BAR_RADIUS<=line_width:
-                    raise Exception("bar_radius too small, should be atleast equal to line_width(default=10)")
+                    raise Exception("[bar_radius] too small, should be atleast equal to [line_width] (default=10)")
                 self.draw='auto'
         else:
             if imageL==None or imageR==None:
@@ -64,10 +64,10 @@ class RangeSliderH(Frame):
                 if imageL.height()==imageR.height() and imageL.width()==imageR.width():
                     if critical1<Height and critical2< Width:
                         if show_value and padX<critical3:
-                            raise Exception("padX too small, value won't be visible completely, expected padX to be atleast "+str(critical3+1)+"px.")
+                            raise Exception("[padX] too small, value won't be visible completely, expected [padX] to be atleast "+str(critical3+1)+"px.")
                         self.draw='image'
                     else:
-                        raise Exception("Image dimensions not suited with widget Height and width, as per given configuration height should be atleast "+str(critical1+1)+"px and width should be atleast "+str(critical2+1)+"px.")
+                        raise Exception("Image dimensions not suited with widget height and width, as per given configuration [Height] should be atleast "+str(critical1+1)+"px and [Width] should be atleast "+str(critical2+1)+"px.")
                 else:
                     raise Exception("Image dimensions incompatible, both handles should have same height and width respectively.")
         Frame.__init__(self, master, height = Height, width = Width)
@@ -77,7 +77,7 @@ class RangeSliderH(Frame):
         self.ImageR=imageR
         self.master = master
         if self.cross_each_other == False:
-            assert variables[0].get() >= variables[1].get(), "Left Handle value is more than the Right Handle Value, which is not possible."
+            assert variables[0].get() <= variables[1].get(), "Left Handle value is more than the Right Handle Value, which is not possible."
         self.max_val = max_val
         self.min_val = min_val
         self.show_value = show_value
@@ -89,7 +89,9 @@ class RangeSliderH(Frame):
         self.suffix=suffix
         self.variables=variables
         self.step_marker = step_marker
-        if step_size != 0:
+        if self.step_marker:
+            assert step_size > 0, "[step_size] must be provided if [step_marker] set to True."
+        if step_size > 0:
             self.init_lis = [(variables[0].get()//step_size)*step_size,
                             (variables[1].get()//step_size)*step_size]
         else:
@@ -110,7 +112,7 @@ class RangeSliderH(Frame):
                 else:
                     self.slider_y = self.canv_H - imageL.height()/2 - 2
             else:
-                raise Exception("valueSide can either be TOP or BOTTOM.")
+                raise Exception("[valueSide] can either be TOP or BOTTOM.")
         if self.draw=='auto':
             self.slider_x = RangeSliderH.BAR_RADIUS+self.padx # x pos of the slider (left side)
         else:
@@ -203,7 +205,8 @@ class RangeSliderH(Frame):
         rangeOutR = self.canv.create_line(endx-(1-posR)*(endx-startx), starty, endx, endy, fill = RangeSliderH.LINE_COLOR, width = RangeSliderH.LINE_WIDTH)
         if self.step_marker:
             markerIDs = self.__addStepMarker()
-        return [rangeOutL, rangeS, rangeOutR, markerIDs]
+            return [rangeOutL, rangeS, rangeOutR, markerIDs]
+        return [rangeOutL, rangeS, rangeOutR, []]
 
     def __addTrackL(self, startx, starty, endx, endy, posL, posR):
         rangeOutL = self.canv.create_line(startx, starty, startx+posL*(endx-startx), endy, fill = RangeSliderH.LINE_COLOR, width = RangeSliderH.LINE_WIDTH)
@@ -211,7 +214,8 @@ class RangeSliderH(Frame):
         # rangeOutR = self.canv.create_line(endx-(1-posR)*(endx-startx), starty, endx, endy, fill = RangeSliderH.LINE_COLOR, width = RangeSliderH.LINE_WIDTH)
         if self.step_marker:
             markerIDs = self.__addStepMarker()
-        return [rangeOutL, rangeS, markerIDs]
+            return [rangeOutL, rangeS, markerIDs]
+        return [rangeOutL, rangeS, []]
 
     def __addTrackR(self, startx, starty, endx, endy, posL, posR):
         # rangeOutL = self.canv.create_line(startx, starty, startx+posL*(endx-startx), endy, fill = RangeSliderH.LINE_COLOR, width = RangeSliderH.LINE_WIDTH)
@@ -219,7 +223,8 @@ class RangeSliderH(Frame):
         rangeOutR = self.canv.create_line(endx-(1-posR)*(endx-startx), starty, endx, endy, fill = RangeSliderH.LINE_COLOR, width = RangeSliderH.LINE_WIDTH)
         if self.step_marker:
             markerIDs = self.__addStepMarker()
-        return [rangeS, rangeOutR, markerIDs]
+            return [rangeS, rangeOutR, markerIDs]
+        return [rangeS, rangeOutR, []]
 
     def __addBar(self, pos, tempIdx=None):
         """@ pos: position of the bar, ranged from (0,1)"""
@@ -389,13 +394,13 @@ class RangeSliderV(Frame):
                 critical2=2*(RangeSliderV.BAR_RADIUS+max(len(str(min_val)),len(str(max_val)))*RangeSliderV.FONT_SIZE/1.2)
                 critical3=2*(padY+RangeSliderV.BAR_RADIUS)
                 if show_value and padY<critical1:
-                    raise Exception("padY too small, handle won't be visible completely, as per given condition padY should be atleast "+str(critical1+1)+"px.")
+                    raise Exception("[padY] too small, handle won't be visible completely, as per given condition [padY] should be atleast "+str(critical1+1)+"px.")
                 if Width<critical2:
-                    raise Exception("Dimensions incompatible, consider decreasing bar_radius or FONT_SIZE or consider increasing widget width, as per given conditios width should be atleast "+str(critical2+1)+"px.")
+                    raise Exception("Dimensions incompatible, consider decreasing [bar_radius] or [FONT_SIZE] or consider increasing widget [Width], as per given conditios [Width] should be atleast "+str(critical2+1)+"px.")
                 if Height<critical3:
-                    raise Exception("Dimensions incompatible, consider decreasing bar_radius or consider increasing widget height, as per given conditios height should be atleast "+str(critical3+1)+"px.")
+                    raise Exception("Dimensions incompatible, consider decreasing [bar_radius] or consider increasing widget [Height], as per given conditios [Height] should be atleast "+str(critical3+1)+"px.")
                 if RangeSliderV.BAR_RADIUS<=line_width:
-                    raise Exception("bar_radius too small, should be minimum equal to line_width(default=3).")
+                    raise Exception("[bar_radius] too small, should be minimum equal to [line_width] (default=3).")
                 self.draw='auto'
         else:
             if imageL==None or imageU==None:
@@ -407,10 +412,10 @@ class RangeSliderV(Frame):
                 if imageL.height()==imageU.height() and imageL.width()==imageU.width():
                     if critical1<Height and critical2< Width:
                         if show_value and padY<critical3:
-                            raise Exception("padY too small, value won't be visible completely, padY mimumum expected is "+str(critical3)+"px.")
+                            raise Exception("[padY] too small, value won't be visible completely, [padY] mimumum expected is "+str(critical3)+"px.")
                         self.draw='image'
                     else:
-                        raise Exception("Image dimensions not suited with widget Height and width, minimum height expected is "+str(critical1)+"px and minimum width expected is "+str(critical2)+"px.")
+                        raise Exception("Image dimensions not suited with widget height and width, minimum [Height] expected is "+str(critical1)+"px and minimum [Width] expected is "+str(critical2)+"px.")
                 else:
                     raise Exception("Image dimensions incompatible, width and height of both handles should be same respectively.")
         Frame.__init__(self, master, height = Height, width = Width)
@@ -421,6 +426,9 @@ class RangeSliderV(Frame):
         self.master = master
         if self.cross_each_other == False:
             assert variables[0].get() <= variables[1].get(), "Top Handle value is less than the Bottom Handle Value, which is not possible."
+        self.step_marker = step_marker
+        if self.step_marker:
+            assert step_size > 0, "[step_size] must be provided if [step_marker] set to True."
         if step_size != 0:
             self.init_lis = [(variables[0].get()//step_size)*step_size,
                             (variables[1].get()//step_size)*step_size]
@@ -468,7 +476,6 @@ class RangeSliderV(Frame):
         self.canv.pack()
         self.canv.bind("<Motion>", self._mouseMotion)
         self.canv.bind("<B1-Motion>", self._moveBar)
-        self.step_marker = step_marker
         self.track = self.__addTrack(self.slider_x, self.slider_y, self.slider_x, self.canv_H-self.slider_y, self.bars[0]["Pos"], self.bars[1]["Pos"])
         tempIdx=0
         for bar in self.bars:
@@ -542,7 +549,8 @@ class RangeSliderV(Frame):
         rangeOutU = self.canv.create_line(startx, starty, endx, starty+(1-posU)*(endy-starty), fill = RangeSliderV.LINE_COLOR, width = RangeSliderV.LINE_WIDTH)
         if self.step_marker:
             markerIDs = self.__addStepMarker()
-        return [rangeOutL, rangeS, rangeOutU, markerIDs]
+            return [rangeOutL, rangeS, rangeOutU, markerIDs]
+        return [rangeOutL, rangeS, rangeOutU, []]
 
     def __addTrackL(self, startx, starty, endx, endy, posL, posU):
         rangeOutL = self.canv.create_line(startx, starty+(1-posL)*(endy-starty), startx, endy, fill = RangeSliderV.LINE_COLOR, width = RangeSliderV.LINE_WIDTH)
@@ -550,7 +558,8 @@ class RangeSliderV(Frame):
         # rangeOutU = self.canv.create_line(startx, starty, endx, starty+(1-posU)*(endy-starty), fill = RangeSliderV.LINE_COLOR, width = RangeSliderV.LINE_WIDTH)
         if self.step_marker:
             markerIDs = self.__addStepMarker()
-        return [rangeOutL, rangeS, markerIDs]
+            return [rangeOutL, rangeS, markerIDs]
+        return [rangeOutL, rangeS, []]
 
     def __addTrackR(self, startx, starty, endx, endy, posL, posU):
         # rangeOutL = self.canv.create_line(startx, starty+(1-posL)*(endy-starty), startx, endy, fill = RangeSliderV.LINE_COLOR, width = RangeSliderV.LINE_WIDTH)
@@ -558,7 +567,8 @@ class RangeSliderV(Frame):
         rangeOutU = self.canv.create_line(startx, starty, endx, starty+(1-posU)*(endy-starty), fill = RangeSliderV.LINE_COLOR, width = RangeSliderV.LINE_WIDTH)
         if self.step_marker:
             markerIDs = self.__addStepMarker()
-        return [rangeS, rangeOutU, markerIDs]
+            return [rangeS, rangeOutU, markerIDs]
+        return [rangeS, rangeOutU, []]
 
     def __addBar(self, pos, tempIdx=None):
         """@ pos: position of the bar, ranged from (0,1)"""
