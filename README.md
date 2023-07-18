@@ -1,9 +1,12 @@
-# RangeSlider 2023.07.1
+# RangeSlider 2023.07.2
 
 Range selection widget for Python Tkinter GUI developement in slider widget structure with two handles.
 <!--    
 ***Add-on files***
 + An ipython notebook is provided to illustrate the basic usage of tool. -->
+
+***Updates and Fixes in v2023.07.2 w.r.t v2023.07.1***
++ Updated: Documentation, included padX and padY in widget calls to avoid confusion with errors. However, the values needs to be updated in case of non-suitability depending on system and used font size, handle size etc.
 
 ***Updates and Fixes in v2023.07.1 w.r.t v2022.12.1***
 + Fixed: Error in updation of UI in absence of step markers.
@@ -63,12 +66,14 @@ root = tk.Tk()
  
 hLeft = tk.DoubleVar(value = 0.2)  #left handle variable initialised to value 0.2
 hRight = tk.DoubleVar(value = 0.85)  #right handle variable initialised to value 0.85
-hSlider = RangeSliderH( root , [hLeft, hRight] )   #horizontal slider
+hSlider = RangeSliderH( root , [hLeft, hRight] , padX = 12)   #horizontal slider, [padX] value might be needed to be different depending on system, font and handle size. Usually [padX] = 12 serves,
+                                                              #otherwise a recommended value will be shown through an error message
 hSlider.pack()   # or grid or place method could be used
 
 vBottom = tk.DoubleVar(value = 0)   #bottom handle variable
 vTop = tk.DoubleVar(value = 1)   #top handle variable
-vSlider = RangeSliderV( root, [vBottom, vTop] )    #vertical slider
+vSlider = RangeSliderV( root, [vBottom, vTop] , padY = 12)    #vertical slider, [padY] value might be needed to be different depending on system, font and handle size. Usually [padY] = 12 serves,
+                                                              #otherwise a recommended value will be shown through an error message
 vSlider.pack()  # or grid or place method could be used
 
 root.mainloop()
