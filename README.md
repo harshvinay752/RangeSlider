@@ -1,3 +1,6 @@
+[![PyPi](https://img.shields.io/pypi/v/RangeSlider)](https://pypi.org/project/RangeSlider/)
+[![Downloads](https://img.shields.io/pypi/dm/RangeSlider)](https://pypi.org/project/RangeSlider)
+
 # RangeSlider 2023.07.2
 
 Range selection widget for Python Tkinter GUI developement in slider widget structure with two handles.
@@ -36,7 +39,7 @@ Note: In order to set the initial values -- declare initial value to the handle 
 + Many others...
 
 # Preview
-[![](/image.PNG)](https://raw.githubusercontent.com/harshvinay752/RangeSlider/main/image.PNG)
+[preview.png] image file in repository.
 
 ## Usage
 
