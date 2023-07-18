@@ -10,6 +10,7 @@ Range selection widget for Python Tkinter GUI developement in slider widget stru
 
 ***Updates and Fixes in v2023.07.2 w.r.t v2023.07.1***
 + Updated: Documentation, included padX and padY in widget calls to avoid confusion with errors. However, the values needs to be updated in case of non-suitability depending on system and used font size, handle size etc.
++ Added: Sample ipython notebook containing code. (Visit: https://github.com/harshvinay752/RangeSlider/blob/1a068138c63ca61ccc734e71c27201e7a851c65a/sample.ipynb)
 
 ***Updates and Fixes in v2023.07.1 w.r.t v2022.12.1***
 + Fixed: Error in updation of UI in absence of step markers.
@@ -211,4 +212,3 @@ n_i = \frac{v_i - v_>}{v_<-v_>}
 This is the second version of this library. It is one of its kind widget for tkinter. When I was developing a tool for my college project I found that at the time no inbuilt or external tool is available for tkinter allowing range selection. However, range selection is a high demand tool specially for applications dealing with data visualizations. I would appreciate any developer from any community who wants to contribute to this project.
 
 I thank RWitak and Sebastian for contributing to this project.
-
